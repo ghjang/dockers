@@ -31,7 +31,7 @@ jobs:
 
     - name: Run script to build Docker image
       run: |
-        cd jdk-17_build_env
+        cd jdk17-build-env
         ./_build_image.sh \
         ${{ env.DOCKER_IMAGE_NAME }} \
         ${{ env.DOCKER_IMAGE_TAG }} \
