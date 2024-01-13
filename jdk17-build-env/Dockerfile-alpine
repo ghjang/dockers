@@ -1,0 +1,29 @@
+#===============================================================================
+# 기본 이미지 설정
+FROM alpine:3.19
+
+#===============================================================================
+# 필요한 패키지 설치 다운로드 및 설치
+RUN apk add --no-cache curl jq git openjdk17 maven
+
+#===============================================================================
+# GitHub CLI 다운로드 및 설치
+RUN curl -LO https://github.com/cli/cli/releases/download/v2.41.0/gh_2.41.0_linux_amd64.tar.gz && \
+    tar xvf gh_2.41.0_linux_amd64.tar.gz && \
+    mv gh_2.41.0_linux_amd64/bin/gh /usr/local/bin && \
+    rm -r gh_2.41.0_linux_amd64 gh_2.41.0_linux_amd64.tar.gz
+
+#===============================================================================
+# 환경변수 설정
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+ENV MAVEN_HOME=/usr/share/maven
+ENV PATH=$JAVA_HOME/bin:$MAVEN_HOME/bin:$PATH
+
+#===============================================================================
+# Maven 프로젝트 파일 복사
+COPY ./maven_pom_files /tmp/maven_pom_files
+
+#===============================================================================
+# Maven 프로젝트 의존성 다운로드
+RUN mvn -f /tmp/maven_pom_files/pom.xml -pl !hello_world_console_app dependency:go-offline && \
+    rm -rf /tmp/maven_pom_files
