@@ -15,6 +15,17 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+      with:
+        path: dockers
+
+    # 'hello_java_world' 저장소에는 간단한 '메이븐 멀티 모듈 프로젝트'가 구성되어 있다.
+    # 이 샘플 프로젝트에는 공통으로 자주 사용하는 의존성이 정의되어 있다. 따라서 이 프로젝트를
+    # 참조해서 도커 이미지를 빌드해두면 미리 의존성을 다운로드 받아두는 효과가 있다. 
+    - name: Checkout 'hello_java_world'
+      uses: actions/checkout@v2
+      with:
+        repository: ghjang/hello_java_world
+        path: hello_java_world
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
@@ -27,11 +38,11 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Set execute permissions for script
-      run: chmod +x jdk17-build-env/_build_image.sh
+      run: chmod +x dockers/jdk17-build-env/_build_image.sh
 
     - name: Run script to build Docker image
       run: |
-        cd jdk17-build-env
+        cd dockers/jdk17-build-env
         ./_build_image.sh \
         ${{ env.DOCKER_IMAGE_NAME }} \
         ${{ env.DOCKER_IMAGE_TAG }} \
