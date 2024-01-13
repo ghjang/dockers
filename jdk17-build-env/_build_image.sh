@@ -62,7 +62,7 @@ cur_dir="$(pwd)"
 echo "cur_dir: $cur_dir"
 
 # 원본 디렉토리
-src_dir="../hello_java_world/projects"
+src_dir="../../hello_java_world/projects"
 
 # 대상 디렉토리
 dst_dir="./maven_pom_files"
