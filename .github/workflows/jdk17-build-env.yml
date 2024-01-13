@@ -26,13 +26,13 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Set execute permissions for alpine.sh
-      run: chmod +x _docker_image_build/alpine.sh
+    - name: Set execute permissions for script
+      run: chmod +x jdk17-build-env/_build_image.sh
 
-    - name: Run alpine.sh to build Docker image
+    - name: Run script to build Docker image
       run: |
         cd jdk-17_build_env
-        ./alpine.sh \
+        ./_build_image.sh \
         ${{ env.DOCKER_IMAGE_NAME }} \
         ${{ env.DOCKER_IMAGE_TAG }} \
         ${{ env.DOCKER_FILE }}
