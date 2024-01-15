@@ -7,6 +7,7 @@ env:
   DOCKER_IMAGE_NAME: alpine-3.19-with-jdk17-build-env
   DOCKER_IMAGE_TAG: 3.19-latest
   DOCKER_FILE: Dockerfile-alpine
+  REF_PROJECT: ../../../hello_java_world
 
 jobs:
   build:
@@ -46,7 +47,8 @@ jobs:
         ./_build_image.sh \
         ${{ env.DOCKER_IMAGE_NAME }} \
         ${{ env.DOCKER_IMAGE_TAG }} \
-        ${{ env.DOCKER_FILE }}
+        ${{ env.DOCKER_FILE }} \
+        ${{ env.REF_PROJECT }}
 
     # 동일한 태그로 이미지를 푸시하면, GitHub Packages에 있는 기존 이미지는 완전히 새 이미지로 덮어쓰여진다.
     # 기존 이미지는 더 이상 접근할 수 없게 되며, 저장소에서도 완전히 제거된다. 이는 GitHub Packages의

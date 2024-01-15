@@ -61,8 +61,8 @@ fi
 cur_dir="$(pwd)"
 echo "cur_dir: $cur_dir"
 
-# 원본 디렉토리
-src_dir="../../hello_java_world/projects"
+# 참조 메이븐 프로젝트 소스 디렉토리
+src_dir="$4"
 
 # 대상 디렉토리
 dst_dir="./maven_pom_files"
@@ -79,17 +79,20 @@ mkdir -p "$dst_dir"
 # 스크립트 종료 시 대상 디렉토리를 삭제하는 클린업 코드를 등록한다.
 trap 'echo -n "Cleaning up..."; rm -rf "$dst_dir"; echo " done."' EXIT
 
-# 원본 디렉토리로 이동한다.
-cd "$src_dir"
+# 참조 메이븐 프로젝트 소스 디렉토리가 지정되었으면 pom.xml 파일들을 dst_dir 하위로 복사한다.
+if [ -n "$src_dir" ]; then
+  # 원본 디렉토리로 이동한다.
+  cd "$src_dir"
 
-# 원본 디렉토리에서 모든 pom.xml 파일을 찾는다.
-# 찾은 파일의 경로를 $(pwd) 명령의 출력으로 대체하고,
-# rsync 명령을 실행하여 파일을 대상 디렉토리에 복사한다.
-# 원본 디렉토리 구조를 유지한다.
-find . -name pom.xml -exec echo "Copying {}" \; -exec rsync -Rv "$(pwd)/{}" "$dst_dir" \;
+  # 원본 디렉토리에서 모든 pom.xml 파일을 찾는다.
+  # 찾은 파일의 경로를 $(pwd) 명령의 출력으로 대체하고,
+  # rsync 명령을 실행하여 파일을 대상 디렉토리에 복사한다.
+  # 원본 디렉토리 구조를 유지한다.
+  find . -name pom.xml -exec echo "Copying {}" \; -exec rsync -Rv "$(pwd)/{}" "$dst_dir" \;
 
-# 원래의 디렉토리로 복귀한다.
-cd "$cur_dir"
+  # 원래의 디렉토리로 복귀한다.
+  cd "$cur_dir"
+fi
 
 # maven_pom_files 디렉토리의 내용을 확인한다.
 echo "Contents of $dst_dir:"
