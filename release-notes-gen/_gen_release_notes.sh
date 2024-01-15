@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Set up GitHub CLI
+export GH_TOKEN=$GITHUB_TOKEN
+
 # Get milestone number
 MILESTONE_NUMBER=$(gh api repos/$GITHUB_REPOSITORY/milestones --jq ".[] | select(.title==\"$TAG_VERSION\") | .number")
 export MILESTONE_NUMBER
