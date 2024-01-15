@@ -41,11 +41,6 @@ else
   jq -r '.[] | "- Issue #\(.number): \(.title)"' issues.json >> _release-notes/${TAG_VERSION}_TMP.md
 fi
 
-# Set up Git
-REPO_OWNER=$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f1)
-TARGET_REPO=$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f2)
-git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${REPO_OWNER}/${TARGET_REPO}.git
-
 # Add safe directory and check if inside Git work tree
 git config --global --add safe.directory $(pwd)
 git rev-parse --is-inside-work-tree

@@ -19,6 +19,10 @@ COPY _gen_release_notes.sh /usr/local/bin
 RUN chmod +x /usr/local/bin/_gen_release_notes.sh
 
 #===============================================================================
-# 릴리즈 노트 생성 커맨드 실행
-WORKDIR /workspace
+# 릴리즈 노트 자동 생성 커맨드 실행
+#
+# NOTE: 'WORKDIR'은 'docker run' 커맨드의 '--workdir' 옵션으로 GitHub Actions 커스텀
+#       액션 실행시 자동으로 지정되어 오버라이드될 것임. 도커 컨테이너 실행 컨텍스트에서 초기 작업
+#       폴더로 지정되는 위치는 메인 워크플로우 컨텍스트에서 클론한 Git 저장소를 도커 컨테이너 실행시에
+#       볼륨 마운트한 위치이다. 결과적으로 아래 쉘 커맨드는 클론한 Git 저장소 내부에서 실행되게 됨.
 ENTRYPOINT ["_gen_release_notes.sh"]
