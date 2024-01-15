@@ -7,7 +7,7 @@ env:
   DOCKER_IMAGE_NAME: alpine-3.19-with-jdk17-build-env
   DOCKER_IMAGE_TAG: 3.19-latest
   DOCKER_FILE: Dockerfile-alpine
-  REF_PROJECT: ../../../hello_java_world
+  REF_PROJECT: ../../hello_java_world
 
 jobs:
   build:
