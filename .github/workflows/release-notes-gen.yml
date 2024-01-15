@@ -1,0 +1,44 @@
+name: Build Docker Image for Auto-generating Release Notes and Push to GitHub Packages
+
+on:
+  workflow_dispatch:
+
+env:
+  DOCKER_IMAGE_NAME: alpine-3.19-for-release-notes-gen
+  DOCKER_IMAGE_TAG: 3.19-latest
+  DOCKER_FILE: Dockerfile
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Login to GitHub Docker Registry
+      uses: docker/login-action@v1 
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build Docker image
+      run: |
+        cd release-notes-gen
+        docker build \
+                -t ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_IMAGE_TAG }} \
+                -f ${{ env.DOCKER_FILE }}
+
+    # 동일한 태그로 이미지를 푸시하면, GitHub Packages에 있는 기존 이미지는 완전히 새 이미지로 덮어쓰여진다.
+    # 기존 이미지는 더 이상 접근할 수 없게 되며, 저장소에서도 완전히 제거된다. 이는 GitHub Packages의
+    # 저장소 용량을 관리하는 데 도움이 된다.하지만, GitHub Packages가 아닌 다른 저장소에 푸시할 경우,
+    # 기존 이미지는 유지되고 새 이미지는 새로운 레이어로 추가될 수도 있다.
+    - name: Push Docker image to GitHub Packages
+      run: |
+        TARGET_IMAGE=ghcr.io/${{ github.repository }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_IMAGE_TAG }}
+        docker tag ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_IMAGE_TAG }} $TARGET_IMAGE
+        docker push $TARGET_IMAGE
