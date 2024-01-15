@@ -1,10 +1,5 @@
 #!/bin/sh
 
-# Set up GitHub CLI
-mkdir -p ~/.config/gh
-echo "github.com:" > ~/.config/gh/hosts.yml
-echo "  oauth_token: $GITHUB_TOKEN" >> ~/.config/gh/hosts.yml
-
 # Get milestone number
 MILESTONE_NUMBER=$(gh api repos/$GITHUB_REPOSITORY/milestones --jq ".[] | select(.title==\"$TAG_VERSION\") | .number")
 export MILESTONE_NUMBER
