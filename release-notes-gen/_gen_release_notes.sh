@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Set up GitHub CLI
 mkdir -p ~/.config/gh
@@ -60,7 +60,7 @@ git fetch origin main:main
 git checkout main
 mv _release-notes/${TAG_VERSION}_TMP.md _release-notes/${TAG_VERSION}.md
 git add _release-notes/${TAG_VERSION}.md
-if [[ $(git diff --name-only --cached) ]]; then git commit -m "Add release notes for version $TAG_VERSION"; fi
+if [ "$(git diff --name-only --cached)" ]; then git commit -m "Add release notes for version $TAG_VERSION"; fi
 git push origin main
 
 # Create combined release notes
