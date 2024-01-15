@@ -31,7 +31,7 @@ jobs:
         cd release-notes-gen
         docker build \
                 -t ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_IMAGE_TAG }} \
-                -f ${{ env.DOCKER_FILE }}
+                -f ${{ env.DOCKER_FILE }} .
 
     # 동일한 태그로 이미지를 푸시하면, GitHub Packages에 있는 기존 이미지는 'untagged' 상태로 변경됨.
     - name: Push Docker image to GitHub Packages
