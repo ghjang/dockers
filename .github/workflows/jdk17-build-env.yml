@@ -50,10 +50,7 @@ jobs:
         ${{ env.DOCKER_FILE }} \
         ${{ env.REF_PROJECT }}
 
-    # 동일한 태그로 이미지를 푸시하면, GitHub Packages에 있는 기존 이미지는 완전히 새 이미지로 덮어쓰여진다.
-    # 기존 이미지는 더 이상 접근할 수 없게 되며, 저장소에서도 완전히 제거된다. 이는 GitHub Packages의
-    # 저장소 용량을 관리하는 데 도움이 된다.하지만, GitHub Packages가 아닌 다른 저장소에 푸시할 경우,
-    # 기존 이미지는 유지되고 새 이미지는 새로운 레이어로 추가될 수도 있다.
+    # 동일한 태그로 이미지를 푸시하면, GitHub Packages에 있는 기존 이미지는 'untagged' 상태로 변경됨.
     - name: Push Docker image to GitHub Packages
       run: |
         TARGET_IMAGE=ghcr.io/${{ github.repository }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_IMAGE_TAG }}
