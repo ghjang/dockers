@@ -1,13 +1,13 @@
 #!/bin/sh
 
-# Set up GitHub CLI
+echo -e "\n==== Set up GitHub CLI ===="
 export GH_TOKEN=$GITHUB_TOKEN
 
-# Get milestone number
+echo -e "\n==== Get milestone number ===="
 MILESTONE_NUMBER=$(gh api repos/$GITHUB_REPOSITORY/milestones --jq ".[] | select(.title==\"$TAG_VERSION\") | .number")
 export MILESTONE_NUMBER
 
-# Get closed issues for the milestone
+echo -e "\n==== Get closed issues for the milestone ===="
 if [ -n "$MILESTONE_NUMBER" ]; then
   ISSUES=$(curl -H "Authorization: token $GITHUB_TOKEN" \
                 -H "Accept: application/vnd.github.v3+json" \
@@ -30,7 +30,7 @@ else
   echo "[]" > issues.json
 fi
 
-# Create individual release notes
+echo -e "\n==== Create individual release notes ===="
 echo "## $TAG_VERSION $(date +%Y-%m-%d)" > _release-notes/$TAG_VERSION.md
 echo "" >> _release-notes/${TAG_VERSION}_TMP.md
 if [ $(jq length issues.json) -eq 0 ]; then
@@ -39,11 +39,11 @@ else
   jq -r '.[] | "- Issue #\(.number): \(.title)"' issues.json >> _release-notes/${TAG_VERSION}_TMP.md
 fi
 
-# Add safe directory and check if inside Git work tree
+echo -e "\n==== Add safe directory and check if inside Git work tree ===="
 git config --global --add safe.directory $(pwd)
 git rev-parse --is-inside-work-tree
 
-# Commit and push release notes
+echo -e "\n==== Commit and push release notes ===="
 echo "pwd: $(pwd)"
 ls -al
 
@@ -56,7 +56,7 @@ git add _release-notes/${TAG_VERSION}.md
 if [ "$(git diff --name-only --cached)" ]; then git commit -m "Add release notes for version $TAG_VERSION"; fi
 git push origin main
 
-# Create combined release notes
+echo -e "\n==== Create combined release notes ===="
 REPO_NAME=$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f2)
 echo "# '${REPO_NAME}' Release Notes" > RELEASES_NOTES.md
 echo "" >> RELEASES_NOTES.md
