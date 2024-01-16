@@ -31,7 +31,7 @@ else
 fi
 
 echo -e "\n==== Create individual release notes ===="
-echo "## $TAG_VERSION $(date +%Y-%m-%d)" > _release-notes/$TAG_VERSION.md
+echo "## $TAG_VERSION $(date +%Y-%m-%d)" > _release-notes/$TAG_VERSION_TMP.md
 echo "" >> _release-notes/${TAG_VERSION}_TMP.md
 if [ $(jq length issues.json) -eq 0 ]; then
   echo "- 해당 릴리즈와 관련된 정상 처리된 이슈가 없습니다." >> _release-notes/${TAG_VERSION}_TMP.md
