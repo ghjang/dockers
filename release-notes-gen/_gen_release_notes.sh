@@ -1,13 +1,44 @@
 #!/bin/sh
 
-echo -e "\n==== Set up GitHub CLI ===="
+# Define required variables
+REQUIRED_VARS="GITHUB_TOKEN TAG_VERSION"
+
+printf "\n==== Check if required variables are set..."
+for VAR in $REQUIRED_VARS; do
+  eval VALUE=\$$VAR
+  if [ -z "$VALUE" ]; then
+    echo "Error: $VAR is not set. Please set the $VAR environment variable."
+    exit 1
+  fi
+done
+
+printf "\n==== Set Environment Variables for Release Notes File ===="
+if [ -z "$RELEASE_NOTES_DIR" ]; then
+  RELEASE_NOTES_DIR="_release-notes"
+fi
+if [ -z "$COMBINED_RELEASE_NOTES_FILE" ]; then
+  COMBINED_RELEASE_NOTES_FILE="RELEASES_NOTES.md"
+fi
+if [ -z "$TARGET_BRANCH" ]; then
+  TARGET_BRANCH="main"
+fi
+echo "RELEASE_NOTES_DIR: $RELEASE_NOTES_DIR"
+echo "COMBINED_RELEASE_NOTES_FILE: $COMBINED_RELEASE_NOTES_FILE"
+echo "TARGET_BRANCH: $TARGET_BRANCH"
+
+TMP_RELEASE_NOTE_FILE="${RELEASE_NOTES_DIR}/${TAG_VERSION}_TMP.md"
+RELEASE_NOTE_FILE="${RELEASE_NOTES_DIR}/${TAG_VERSION}.md"
+echo "TMP_RELEASE_NOTE_FILE: $TMP_RELEASE_NOTE_FILE"
+echo "RELEASE_NOTE_FILE: $RELEASE_NOTE_FILE"
+
+printf "\n==== Set up GitHub CLI Auth Token ===="
 export GH_TOKEN=$GITHUB_TOKEN
 
-echo -e "\n==== Get milestone number ===="
+printf "\n==== Get milestone number ===="
 MILESTONE_NUMBER=$(gh api repos/$GITHUB_REPOSITORY/milestones --jq ".[] | select(.title==\"$TAG_VERSION\") | .number")
 export MILESTONE_NUMBER
 
-echo -e "\n==== Get closed issues for the milestone ===="
+printf "\n==== Get closed issues for the milestone ===="
 if [ -n "$MILESTONE_NUMBER" ]; then
   ISSUES=$(curl -H "Authorization: token $GITHUB_TOKEN" \
                 -H "Accept: application/vnd.github.v3+json" \
@@ -30,36 +61,38 @@ else
   echo "[]" > issues.json
 fi
 
-echo -e "\n==== Create individual release notes ===="
-echo "## $TAG_VERSION $(date +%Y-%m-%d)" > _release-notes/$TAG_VERSION_TMP.md
-echo "" >> _release-notes/${TAG_VERSION}_TMP.md
+printf "\n==== Create individual release notes ===="
+echo "## $TAG_VERSION $(date +%Y-%m-%d)" > $TMP_RELEASE_NOTE_FILE
+echo "" >> $TMP_RELEASE_NOTE_FILE
 if [ $(jq length issues.json) -eq 0 ]; then
-  echo "- 해당 릴리즈와 관련된 정상 처리된 이슈가 없습니다." >> _release-notes/${TAG_VERSION}_TMP.md
+  echo "- 해당 릴리즈와 관련된 정상 처리된 이슈가 없습니다." >> $TMP_RELEASE_NOTE_FILE
 else
-  jq -r '.[] | "- Issue #\(.number): \(.title)"' issues.json >> _release-notes/${TAG_VERSION}_TMP.md
+  jq -r '.[] | "- Issue #\(.number): \(.title)"' issues.json >> $TMP_RELEASE_NOTE_FILE
 fi
 
-echo -e "\n==== Add safe directory and check if inside Git work tree ===="
+printf "\n==== Add safe directory and check if inside Git work tree ===="
 git config --global --add safe.directory $(pwd)
 git rev-parse --is-inside-work-tree
 
-echo -e "\n==== Commit and push release notes ===="
+printf "\n==== Commit and push release notes ===="
 echo "pwd: $(pwd)"
 ls -al
 
 git config --local user.email "action@github.com"
 git config --local user.name "GitHub Action"
-git fetch origin main:main
-git checkout main
-mv _release-notes/${TAG_VERSION}_TMP.md _release-notes/${TAG_VERSION}.md
-git add _release-notes/${TAG_VERSION}.md
+git fetch origin $TARGET_BRANCH:$TARGET_BRANCH
+git checkout $TARGET_BRANCH
+mv $TMP_RELEASE_NOTE_FILE $RELEASE_NOTE_FILE
+git add $RELEASE_NOTE_FILE
 if [ "$(git diff --name-only --cached)" ]; then git commit -m "Add release notes for version $TAG_VERSION"; fi
-git push origin main
+git push origin $TARGET_BRANCH
 
-echo -e "\n==== Create combined release notes ===="
+printf "\n==== Create combined release notes ===="
 REPO_NAME=$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f2)
-echo "# '${REPO_NAME}' Release Notes" > RELEASES_NOTES.md
-echo "" >> RELEASES_NOTES.md
-find _release-notes -name "*.md" -print0 | \
+echo "# '${REPO_NAME}' Release Notes" > $COMBINED_RELEASE_NOTES_FILE
+echo "" >> $COMBINED_RELEASE_NOTES_FILE
+find $RELEASE_NOTES_DIR -name "*.md" -print0 | \
       sort -zrV | \
-      xargs -0 -I{} sh -c 'cat {}; echo ""' >> RELEASES_NOTES.md
+      xargs -0 -I{} sh -c 'cat {}; echo ""' >> $COMBINED_RELEASE_NOTES_FILE
+sed -i.bak -e :a -e '/^\n*$/{$d;N;};/\n$/ba' $COMBINED_RELEASE_NOTES_FILE
+rm $COMBINED_RELEASE_NOTES_FILE.bak
