@@ -76,7 +76,7 @@ else
 fi
 
 printf "\n==== Create individual release notes ====\n"
-echo "## $RELEASE_VERSION $(date +%Y-%m-%d)" > $TMP_RELEASE_NOTE_FILE
+echo "## $RELEASE_VERSION ($(date +%Y-%m-%d))" > $TMP_RELEASE_NOTE_FILE
 echo "" >> $TMP_RELEASE_NOTE_FILE
 if [ $(jq length issues.json) -eq 0 ]; then
   echo "- 해당 릴리즈와 관련된 정상 처리된 이슈가 없습니다." >> $TMP_RELEASE_NOTE_FILE
