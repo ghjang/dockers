@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Define required variables
-REQUIRED_VARS="GITHUB_TOKEN TAG_VERSION"
+REQUIRED_VARS="GITHUB_TOKEN RELEASE_VERSION"
 
 printf "\n==== Check if required variables are set..."
 for VAR in $REQUIRED_VARS; do
@@ -14,6 +14,10 @@ done
 echo "OK"
 
 printf "\n==== Set Environment Variables for Release Notes File ====\n"
+if [ -z "$PROJECT_NAME" ]; then
+  PROJECT_NAME="$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f2)"
+fi
+
 if [ -z "$RELEASE_NOTES_DIR" ]; then
   RELEASE_NOTES_DIR="_release-notes"
 fi
@@ -31,9 +35,10 @@ if [ -z "$TARGET_BRANCH" ]; then
   TARGET_BRANCH="main"
 fi
 
-TMP_RELEASE_NOTE_FILE="${RELEASE_NOTES_DIR}/${TAG_VERSION}_TMP.md"
-RELEASE_NOTE_FILE="${RELEASE_NOTES_DIR}/${TAG_VERSION}.md"
+TMP_RELEASE_NOTE_FILE="${RELEASE_NOTES_DIR}/${RELEASE_VERSION}_TMP.md"
+RELEASE_NOTE_FILE="${RELEASE_NOTES_DIR}/${RELEASE_VERSION}.md"
 
+echo "PROJECT_NAME: $PROJECT_NAME"
 echo "RELEASE_NOTES_DIR: $RELEASE_NOTES_DIR"
 echo "COMBINED_RELEASE_NOTES_FILE: $COMBINED_RELEASE_NOTES_FILE"
 echo "TARGET_BRANCH: $TARGET_BRANCH"
@@ -44,7 +49,7 @@ printf "\n==== Set up GitHub CLI Auth Token ====\n"
 export GH_TOKEN=$GITHUB_TOKEN
 
 printf "\n==== Get milestone number ====\n"
-MILESTONE_NUMBER=$(gh api repos/$GITHUB_REPOSITORY/milestones --jq ".[] | select(.title==\"$TAG_VERSION\") | .number")
+MILESTONE_NUMBER=$(gh api repos/$GITHUB_REPOSITORY/milestones --jq ".[] | select(.title==\"$RELEASE_VERSION\") | .number")
 export MILESTONE_NUMBER
 
 printf "\n==== Get closed issues for the milestone ====\n"
@@ -71,7 +76,7 @@ else
 fi
 
 printf "\n==== Create individual release notes ====\n"
-echo "## $TAG_VERSION $(date +%Y-%m-%d)" > $TMP_RELEASE_NOTE_FILE
+echo "## $RELEASE_VERSION $(date +%Y-%m-%d)" > $TMP_RELEASE_NOTE_FILE
 echo "" >> $TMP_RELEASE_NOTE_FILE
 if [ $(jq length issues.json) -eq 0 ]; then
   echo "- 해당 릴리즈와 관련된 정상 처리된 이슈가 없습니다." >> $TMP_RELEASE_NOTE_FILE
@@ -93,12 +98,11 @@ git fetch origin $TARGET_BRANCH:$TARGET_BRANCH
 git checkout $TARGET_BRANCH
 mv $TMP_RELEASE_NOTE_FILE $RELEASE_NOTE_FILE
 git add $RELEASE_NOTE_FILE
-if [ "$(git diff --name-only --cached)" ]; then git commit -m "Add release notes for version $TAG_VERSION"; fi
+if [ "$(git diff --name-only --cached)" ]; then git commit -m "Add release notes for version $RELEASE_VERSION"; fi
 git push origin $TARGET_BRANCH
 
 printf "\n==== Create combined release notes ====\n"
-REPO_NAME=$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f2)
-echo "# '${REPO_NAME}' Release Notes" > $COMBINED_RELEASE_NOTES_FILE
+echo "# '${PROJECT_NAME}' Release Notes" > $COMBINED_RELEASE_NOTES_FILE
 echo "" >> $COMBINED_RELEASE_NOTES_FILE
 find $RELEASE_NOTES_DIR -name "*.md" -print0 | \
       sort -zrV | \
